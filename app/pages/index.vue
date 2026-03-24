@@ -1,8 +1,8 @@
 <script setup lang="ts">
 const storefront = useStorefront();
 
-const { data, error } = await useAsyncData("products", () =>
-	storefront.request(`#graphql
+const { data, error } = await useAsyncData("products", async () => {
+	const response = await storefront.request(`#graphql
 		query FetchProducts($first: Int) {
 			products(first: $first) {
 				nodes {
@@ -16,8 +16,9 @@ const { data, error } = await useAsyncData("products", () =>
 		variables: {
 			first: 10,
 		},
-	}),
-);
+	});
+	return response.data;
+});
 </script>
 
 <template>
@@ -28,6 +29,6 @@ const { data, error } = await useAsyncData("products", () =>
 		>
 			Erro ao carregar produtos: {{ error.message }}
 		</p>
-		<pre v-else>{{ data?.data?.products }}</pre>
+		<pre v-else>{{ data?.products }}</pre>
 	</div>
 </template>
