@@ -4,7 +4,7 @@ export default defineEventHandler((event) => {
 	clearAuthCookies(event);
 
 	if (idToken) {
-		const logoutUrl = buildLogoutUrl(idToken);
+		const logoutUrl = buildLogoutUrl(event, idToken);
 		return sendRedirect(event, logoutUrl);
 	}
 

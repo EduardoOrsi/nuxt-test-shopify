@@ -1,5 +1,5 @@
 export default defineEventHandler((event) => {
-	const { url, state, nonce } = buildAuthorizationUrl();
+	const { url, state, nonce } = buildAuthorizationUrl(event);
 
 	const cookieOptions = {
 		httpOnly: true,

@@ -51,8 +51,16 @@ export function generateRandomString(length = 64): string {
 	return Array.from(array, byte => byte.toString(16).padStart(2, "0")).join("").slice(0, length);
 }
 
-export function buildAuthorizationUrl(): { url: string; state: string; nonce: string } {
+export function getOriginUrl(event: H3Event): string {
 	const config = getConfig();
+	const host = getRequestHeader(event, "host");
+	const proto = getRequestHeader(event, "x-forwarded-proto") || "https";
+	return host ? `${proto}://${host}` : config.appUrl;
+}
+
+export function buildAuthorizationUrl(event: H3Event): { url: string; state: string; nonce: string } {
+	const config = getConfig();
+	const origin = getOriginUrl(event);
 	const state = generateRandomString(32);
 	const nonce = generateRandomString(32);
 
@@ -60,7 +68,7 @@ export function buildAuthorizationUrl(): { url: string; state: string; nonce: st
 		scope: SCOPES,
 		client_id: config.clientId,
 		response_type: "code",
-		redirect_uri: `${config.appUrl}/api/auth/callback`,
+		redirect_uri: `${origin}/api/auth/callback`,
 		state,
 		nonce,
 	});
@@ -69,14 +77,15 @@ export function buildAuthorizationUrl(): { url: string; state: string; nonce: st
 	return { url, state, nonce };
 }
 
-export async function exchangeCodeForTokens(code: string): Promise<TokenResponse> {
+export async function exchangeCodeForTokens(event: H3Event, code: string): Promise<TokenResponse> {
 	const config = getConfig();
+	const origin = getOriginUrl(event);
 
 	const credentials = btoa(`${config.clientId}:${config.clientSecret}`);
 	const body = new URLSearchParams({
 		grant_type: "authorization_code",
 		client_id: config.clientId,
-		redirect_uri: `${config.appUrl}/api/auth/callback`,
+		redirect_uri: `${origin}/api/auth/callback`,
 		code,
 	});
 
@@ -153,12 +162,13 @@ export async function queryCustomerApi(accessToken: string, query: string, varia
 	return response.json();
 }
 
-export function buildLogoutUrl(idToken: string): string {
+export function buildLogoutUrl(event: H3Event, idToken: string): string {
 	const config = getConfig();
+	const origin = getOriginUrl(event);
 
 	const params = new URLSearchParams({
 		id_token_hint: idToken,
-		post_logout_redirect_uri: config.appUrl,
+		post_logout_redirect_uri: origin,
 	});
 
 	return `${getLogoutEndpoint(config.storeId)}?${params.toString()}`;

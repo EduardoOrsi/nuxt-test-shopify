@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
 	deleteCookie(event, "auth_nonce", { path: "/" });
 
 	// Exchange code for tokens
-	const tokens = await exchangeCodeForTokens(code);
+	const tokens = await exchangeCodeForTokens(event, code);
 
 	// Set auth cookies
 	setAuthCookies(event, tokens);
