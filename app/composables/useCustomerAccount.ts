@@ -236,9 +236,10 @@ export function useCustomerAccount() {
 
 	async function fetchCustomer() {
 		try {
-			const { data } = await useFetch<{ data: CustomerData }>("/api/auth/customer");
-			if (data.value?.data?.customer) {
-				customer.value = data.value.data.customer;
+			const fetchFn = import.meta.server ? useRequestFetch() : $fetch;
+			const response = await fetchFn<{ data: CustomerData }>("/api/auth/customer");
+			if (response?.data?.customer) {
+				customer.value = response.data.customer;
 			}
 		}
 		catch {
